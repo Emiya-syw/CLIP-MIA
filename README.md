@@ -64,6 +64,21 @@ We also present a new weakly supervised attack method that leverages ground-trut
 
    Run `main.py --model ViT-B-32` (with other arguments).
 
+
+### Quick Run Script
+
+现在参数都写在 `run_attack.sh` 里，不需要命令行传参。
+
+```bash
+bash run_attack.sh
+```
+
+使用方式：
+
+1. 打开 `run_attack.sh`。
+2. 修改脚本顶部的模型名、采样参数和数据路径（例如 `MODEL_NAME`、`NT_LENGTH`、`TRAIN_DATA` 等）。
+3. 保存后直接执行 `bash run_attack.sh`。
+
 &nbsp;
 
 For any questions, please contact [myeongseob@vt.edu](mailto:myeongseob@vt.edu).
