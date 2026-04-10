@@ -22,6 +22,7 @@ import util
 from params import *
 from text_preprocessing import text_preprocessing
 from nontrain_selection import *
+from nontrain_selection import _extract_urls
 from pseudotrain_selection import *
 from train_attackmodel import train_attackmodel
 from sklearn.model_selection import train_test_split
