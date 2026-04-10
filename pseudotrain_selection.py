@@ -10,6 +10,7 @@ import open_clip
 from open_clip import tokenizer, tokenize
 from data import get_data, get_data_val
 from text_preprocessing import text_preprocessing
+from nontrain_selection import _extract_urls
 
 
 def _load_overlap_array(filename):
@@ -39,7 +40,7 @@ def select_pseudotrain(args, target_model, selected_nt_txt, selected_nt_url, dat
     for i, batch in enumerate( dataloader ): ## LAION
         
         train_text = [text_preprocessing(q) for q in batch[1]]   
-        train_url = [d['url'] for d in batch[2]]     
+        train_url = _extract_urls(batch[2])
           
         common = np.intersect1d(np.array(train_text), np.array(selected_nt_txt)) 
         x_ind = np.where(np.isin(np.array(train_text), common))[0]
@@ -95,7 +96,7 @@ def select_pseudotrain(args, target_model, selected_nt_txt, selected_nt_url, dat
     for i, batch in enumerate( valloader ): 
         
         train_text = [text_preprocessing(q) for q in batch[1]]   
-        train_url = [d['url'] for d in batch[2]]     
+        train_url = _extract_urls(batch[2])
 
         common= np.intersect1d(np.array(train_text), CC3M_LAION_commonset) ## to exclude the overlapped non-train pairs with train pairs
         x_ind = np.where(np.isin(np.array(train_text), common))[0]   
@@ -151,7 +152,7 @@ def select_pseudotrain(args, target_model, selected_nt_txt, selected_nt_url, dat
     for i, batch in enumerate( cc12m_valoader ): 
         
         train_text = [text_preprocessing(q) for q in batch[1]]   
-        train_url = [d['url'] for d in batch[2]]     
+        train_url = _extract_urls(batch[2])
 
         common= np.intersect1d(np.array(train_text), CC12M_LAION_commonset) ## to exclude the overlapped non-train pairs with train pairs
         x_ind = np.where(np.isin(np.array(train_text), common))[0]   
@@ -205,7 +206,7 @@ def select_pseudotrain(args, target_model, selected_nt_txt, selected_nt_url, dat
     for i, batch in enumerate( mscoco_valoader ): 
         
         train_text = [text_preprocessing(q) for q in batch[1]]   
-        train_url = [d['url'] for d in batch[2]]             
+        train_url = _extract_urls(batch[2])
         
         common= np.intersect1d(np.array(train_text), MSCOCO_LAION_commonset) ## to exclude the overlapped non-train pairs with train pairs
         x_ind = np.where(np.isin(np.array(train_text), common))[0]   
