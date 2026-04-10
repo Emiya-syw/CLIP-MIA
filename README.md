@@ -69,10 +69,14 @@ We also present a new weakly supervised attack method that leverages ground-trut
 
 现在支持你的自定义数据（forget / retain）流程：
 
-1. 先把训练JSONL和测试pair-JSONL转成CSV（`filepath,title,url`）：
+1. 先把训练JSON/JSONL和测试pair JSON/JSONL转成CSV（`filepath,title,url`）：
 
 ```bash
-python3 prepare_vaw_mia_csv.py   --train-jsonl /path/to/train.jsonl   --test-jsonl /path/to/test_pairs.jsonl   --output-dir /path/to/mia_csvs   --train-image-root /path/to/train_images   --test-image-root /path/to/test_images
+python3 prepare_vaw_mia_csv.py \
+  --train-file /home/sunyw/cliperase_ddp/datasets/vaw/vaw_dataset/data/man_standing/train_man_standing_ori.jsonl \
+  --test-file /home/sunyw/cliperase_ddp/datasets/vaw/vaw_dataset/data/man_standing/CFR_irr.json \
+  --output-dir /home/sunyw/cliperase_ddp/datasets/vaw/vaw_dataset/data/man_standing/mia_csvs \
+  --test-image-root /home/sunyw/VL-CheckList-main/datasets/vg/VG_100K_2
 ```
 
 2. 修改 `run_attack.sh` 里的 `CSV_DIR` 和样本数参数。
@@ -83,7 +87,7 @@ python3 prepare_vaw_mia_csv.py   --train-jsonl /path/to/train.jsonl   --test-jso
 bash run_attack.sh
 ```
 
-说明：默认映射是 `forget -> member`，`retain -> non-member`。
+说明：默认映射是 `forget -> member`，`retain -> non-member`；`CFR_irr.json` 这种数组JSON也可直接读取。
 
 &nbsp;
 

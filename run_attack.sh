@@ -29,7 +29,7 @@ HYPER_LAMBDA=1.5
 #   ├── train_retain.csv
 #   ├── test_forget.csv
 #   └── test_retain.csv
-CSV_DIR="/path/to/mia_csvs"
+CSV_DIR="/home/sunyw/cliperase_ddp/datasets/vaw/vaw_dataset/data/man_standing/mia_csvs"
 
 TRAIN_FORGET_CSV="$CSV_DIR/train_forget.csv"
 TRAIN_RETAIN_CSV="$CSV_DIR/train_retain.csv"

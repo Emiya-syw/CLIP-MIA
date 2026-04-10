@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Prepare CSV files for CLIP-MIA from custom VAW-style JSONL data.
+Prepare CSV files for CLIP-MIA from custom VAW-style JSON/JSONL data.
 
 Supported input formats:
-1) Train JSONL (flat record), e.g.
+1) Train JSONL / JSON (flat record), e.g.
    {
      "instance_id": "2402804010",
      "positive_caption": "A photo of happy smiling standing man.",
      "crop_path": "/.../2402804010.jpg",
      "flag": "forget"
    }
-2) Test pair JSONL, e.g.
+2) Test pair JSONL / JSON, e.g.
    {
      "sample": {... forget sample ...},
      "same_unit_sample": {... retain sample ...}
@@ -29,14 +29,29 @@ import json
 from pathlib import Path
 
 
-def read_jsonl(path: Path):
+def read_json_records(path: Path):
+    """
+    Supports:
+    - JSONL: one JSON object per line
+    - JSON: a single JSON object or a list of objects
+    """
+    raw = path.read_text(encoding="utf-8").strip()
+    if not raw:
+        return []
+    if raw[0] in ("[", "{"):
+        obj = json.loads(raw)
+        if isinstance(obj, list):
+            return obj
+        if isinstance(obj, dict):
+            return [obj]
+        raise ValueError(f"Unsupported JSON root type: {type(obj)}")
+
     items = []
-    with path.open("r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            items.append(json.loads(line))
+    for line in raw.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        items.append(json.loads(line))
     return items
 
 
@@ -73,16 +88,24 @@ def write_csv(path: Path, rows):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--train-jsonl", type=Path, required=True)
-    parser.add_argument("--test-jsonl", type=Path, required=True)
+    parser.add_argument("--train-file", type=Path, default=None, help="Train JSON/JSONL path")
+    parser.add_argument("--test-file", type=Path, default=None, help="Test JSON/JSONL path")
+    # Backward-compatible aliases
+    parser.add_argument("--train-jsonl", type=Path, default=None, help="(deprecated) same as --train-file")
+    parser.add_argument("--test-jsonl", type=Path, default=None, help="(deprecated) same as --test-file")
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--train-image-root", type=Path, default=None)
     parser.add_argument("--test-image-root", type=Path, default=None)
     parser.add_argument("--forget-flag", type=str, default="forget")
     args = parser.parse_args()
 
-    train = read_jsonl(args.train_jsonl)
-    test = read_jsonl(args.test_jsonl)
+    train_file = args.train_file or args.train_jsonl
+    test_file = args.test_file or args.test_jsonl
+    if train_file is None or test_file is None:
+        raise ValueError("Please provide --train-file and --test-file (or deprecated --train-jsonl/--test-jsonl).")
+
+    train = read_json_records(train_file)
+    test = read_json_records(test_file)
 
     train_forget, train_retain = [], []
     for item in train:
