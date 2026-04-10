@@ -4,11 +4,26 @@ import numpy as np
 import argparse
 import random
 import time
+from pathlib import Path
 
 import open_clip
 from open_clip import tokenizer, tokenize
 from data import get_data, get_data_val
 from text_preprocessing import text_preprocessing
+
+
+def _load_overlap_array(filename):
+    candidate_paths = [
+        Path.cwd() / filename,
+        Path(__file__).resolve().parent / filename,
+        Path(__file__).resolve().parent / "data" / filename,
+    ]
+    for candidate in candidate_paths:
+        if candidate.exists():
+            return np.load(candidate)
+    searched = ", ".join(str(p) for p in candidate_paths)
+    print(f"[WARN] overlap metadata not found: {filename}. Continue without overlap filtering. searched={searched}")
+    return np.array([], dtype=str)
 
 def select_pseudotrain(args, target_model, selected_nt_txt, selected_nt_url, dataloader, train_threshold, preprocess_train, preprocess_val, device, length):
 
@@ -72,9 +87,9 @@ def select_pseudotrain(args, target_model, selected_nt_txt, selected_nt_url, dat
     ### Nontrain data from valloader
     start_time = time.time()
 
-    CC3M_LAION_commonset = np.load('./CC3M_LAION_commonset.npy')
-    CC3M_LAION_unqiue_commonset = np.load('./CC3M_LAION_unqiue_commonset.npy')
-    CC3M_LAION_url_commonset = np.load('./CC3M_LAION_url_commonset.npy')
+    CC3M_LAION_commonset = _load_overlap_array('CC3M_LAION_commonset.npy')
+    CC3M_LAION_unqiue_commonset = _load_overlap_array('CC3M_LAION_unqiue_commonset.npy')
+    CC3M_LAION_url_commonset = _load_overlap_array('CC3M_LAION_url_commonset.npy')
 
     cnt_nontrain = 0
     for i, batch in enumerate( valloader ): 
@@ -128,9 +143,9 @@ def select_pseudotrain(args, target_model, selected_nt_txt, selected_nt_url, dat
     
     start_time = time.time()
 
-    CC12M_LAION_commonset = np.load('./CC12M_LAION_commonset.npy')
-    CC12M_LAION_unqiue_commonset = np.load('./CC12M_LAION_unqiue_commonset.npy')
-    CC12M_LAION_url_commonset = np.load('./CC12M_LAION_url_commonset.npy')
+    CC12M_LAION_commonset = _load_overlap_array('CC12M_LAION_commonset.npy')
+    CC12M_LAION_unqiue_commonset = _load_overlap_array('CC12M_LAION_unqiue_commonset.npy')
+    CC12M_LAION_url_commonset = _load_overlap_array('CC12M_LAION_url_commonset.npy')
     
     cnt_nontrain = 0
     for i, batch in enumerate( cc12m_valoader ): 
@@ -182,8 +197,8 @@ def select_pseudotrain(args, target_model, selected_nt_txt, selected_nt_url, dat
 
     start_time = time.time()
 
-    MSCOCO_LAION_commonset = np.load('./MSCOCO_LAION_commonset.npy')
-    MSCOCO_LAION_unqiue_commonset = np.load('./MSCOCO_LAION_unqiue_commonset.npy')
+    MSCOCO_LAION_commonset = _load_overlap_array('MSCOCO_LAION_commonset.npy')
+    MSCOCO_LAION_unqiue_commonset = _load_overlap_array('MSCOCO_LAION_unqiue_commonset.npy')
 
     ## nontrain data 
     cnt_nontrain = 0
