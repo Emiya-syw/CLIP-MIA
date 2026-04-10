@@ -22,6 +22,7 @@ import util
 from params import *
 from text_preprocessing import text_preprocessing
 from nontrain_selection import *
+from nontrain_selection import _extract_urls
 from pseudotrain_selection import *
 from train_attackmodel import train_attackmodel
 from sklearn.model_selection import train_test_split
@@ -76,6 +77,20 @@ def sweep(score, x):
     fpr, tpr, _ = roc_curve(x, score)
     acc = np.max(1-(fpr+(1-tpr))/2)
     return fpr, tpr, auc(fpr, tpr), acc
+
+
+def _select_indices_with_fallback(total_len, excluded_idx):
+    """Select indices after exclusion, but keep at least one sample."""
+    all_idx = np.arange(total_len)
+    if len(excluded_idx) > 0:
+        selected_idx = np.setdiff1d(all_idx, excluded_idx)
+    else:
+        selected_idx = all_idx
+
+    if len(selected_idx) == 0 and total_len > 0:
+        selected_idx = np.array([np.random.randint(0, total_len)])
+    return selected_idx
+
 
 def main(args, device):
     nontrain_length = args.nt_length # sample size for each dataset
@@ -177,7 +192,7 @@ def main(args, device):
 
         ## Train       
         evlauate_train_text_lst = [text_preprocessing(q) for q in batch[1]]   
-        evlauate_train_url = [d['url'] for d in batch[2]]             
+        evlauate_train_url = _extract_urls(batch[2])
 
         common = np.intersect1d(np.array(evlauate_train_text_lst), np.array(selected_t_txt)) ## duplication check with [attack model]train data
         x_ind = np.where(np.isin(np.array(evlauate_train_text_lst), common))[0]
@@ -189,10 +204,7 @@ def main(args, device):
         x_ind_4th = np.where(np.isin(np.array(evlauate_train_url), common4))[0]
         combined_x_ind = np.union1d(np.union1d(np.union1d(x_ind, x_ind_2nd), x_ind_3rd), x_ind_4th)
 
-        if len(combined_x_ind) > 0:
-            selected_ind = np.setdiff1d(np.arange(len(batch[0])), combined_x_ind)
-        else:
-            selected_ind = np.arange(len(batch[0]))
+        selected_ind = _select_indices_with_fallback(len(batch[0]), combined_x_ind)
 
         images, texts = batch[0][selected_ind], tokenize(batch[1])[selected_ind]
         evaluate_cnt_train += len(images)
@@ -225,7 +237,7 @@ def main(args, device):
     for i, batch in enumerate( evaluate_valloader ): 
 
         evlauate_non_train_text_lst = [text_preprocessing(q) for q in batch[1]]   
-        evlauate_non_train_url = [d['url'] for d in batch[2]]             
+        evlauate_non_train_url = _extract_urls(batch[2])
 
         common, _, _ = np.intersect1d(np.array(evlauate_non_train_text_lst), CC3M_LAION_commonset, return_indices=True) ## duplication check with train data
         x_ind = np.where(np.isin(np.array(evlauate_non_train_text_lst), common))[0]    
@@ -241,10 +253,7 @@ def main(args, device):
         x_ind_6th = np.where(np.isin(np.array(evlauate_non_train_url), common6))[0]        
         combined_x_ind = np.union1d(np.union1d(np.union1d(np.union1d(np.union1d(x_ind, x_ind_2nd), x_ind_3rd), x_ind_4th), x_ind_5th), x_ind_6th)
 
-        if len(combined_x_ind) > 0:
-            selected_ind = np.setdiff1d(np.arange(len(batch[0])), combined_x_ind)
-        else:
-            selected_ind = np.arange(len(batch[0]))
+        selected_ind = _select_indices_with_fallback(len(batch[0]), combined_x_ind)
 
         images, texts = batch[0][selected_ind], tokenize(batch[1])[selected_ind]
         evaluate_cnt_val += len(images)
@@ -281,7 +290,7 @@ def main(args, device):
     for i, batch in enumerate( cc12m_valoader ): 
 
         evlauate_non_train_text_lst = [text_preprocessing(q) for q in batch[1]]   
-        evlauate_non_train_url = [d['url'] for d in batch[2]]             
+        evlauate_non_train_url = _extract_urls(batch[2])
         
         common, _, _ = np.intersect1d(np.array(evlauate_non_train_text_lst), CC12M_LAION_commonset, return_indices=True)
         x_ind = np.where(np.isin(np.array(evlauate_non_train_text_lst), common))[0]    
@@ -297,10 +306,7 @@ def main(args, device):
         x_ind_6th = np.where(np.isin(np.array(evlauate_non_train_url), common6))[0]        
         combined_x_ind = np.union1d(np.union1d(np.union1d(np.union1d(np.union1d(x_ind, x_ind_2nd), x_ind_3rd), x_ind_4th), x_ind_5th), x_ind_6th)
 
-        if len(combined_x_ind) > 0:
-            selected_ind = np.setdiff1d(np.arange(len(batch[0])), combined_x_ind)
-        else:
-            selected_ind = np.arange(len(batch[0]))
+        selected_ind = _select_indices_with_fallback(len(batch[0]), combined_x_ind)
 
         images, texts = batch[0][selected_ind], tokenize(batch[1])[selected_ind]
         evaluate_cnt_val += len(images)
@@ -337,7 +343,7 @@ def main(args, device):
     for i, batch in enumerate( mscoco_valoader ): 
 
         evlauate_non_train_text_lst = [text_preprocessing(q) for q in batch[1]]   
-        evlauate_non_train_url = [d['url'] for d in batch[2]]             
+        evlauate_non_train_url = _extract_urls(batch[2])
 
         common, _, _ = np.intersect1d(np.array(evlauate_non_train_text_lst), MSCOCO_LAION_commonset, return_indices=True)
         x_ind = np.where(np.isin(np.array(evlauate_non_train_text_lst), common))[0]    
@@ -351,10 +357,7 @@ def main(args, device):
         x_ind_5th = np.where(np.isin(np.array(evlauate_non_train_url), common5))[0]        
         combined_x_ind = np.union1d(np.union1d(np.union1d(np.union1d(x_ind, x_ind_2nd), x_ind_3rd), x_ind_4th), x_ind_5th)
 
-        if len(combined_x_ind) > 0:
-            selected_ind = np.setdiff1d(np.arange(len(batch[0])), combined_x_ind)
-        else:
-            selected_ind = np.arange(len(batch[0]))
+        selected_ind = _select_indices_with_fallback(len(batch[0]), combined_x_ind)
 
         images, texts = batch[0][selected_ind], tokenize(batch[1])[selected_ind]
         evaluate_cnt_val += len(images)
@@ -383,6 +386,52 @@ def main(args, device):
     print(util.red('Since the numbers between two datasets are not balanced, we do random sampling here to train an attack model'))
 
     ################################################## random sampling
+
+    # Final safety net: if filtering removed all members/non-members in eval,
+    # backfill one sample directly from the corresponding dataloader.
+    if len(evaluate_selected_t_cs_lst_tar) == 0:
+        for batch in evaluate_dataloader:
+            if len(batch[0]) == 0:
+                continue
+            images, texts = batch[0][:1], tokenize(batch[1])[:1]
+            images = images.to(device)
+            texts = texts.to(device)
+            with torch.no_grad(), torch.cuda.amp.autocast():
+                image_features2, text_features2, _ = target_model(images, texts)
+            cs_2 = torch.diagonal(image_features2 @ text_features2.T)
+            evaluate_selected_t_cs_lst_tar.extend(cs_2.detach().cpu().numpy())
+            evaluate_selected_t_feat_lst_tar.extend(torch.cat([image_features2, text_features2], dim=1).detach().cpu())
+            break
+
+    if len(evaluate_selected_nt_cs_lst_tar) == 0:
+        for batch in evaluate_valloader:
+            if len(batch[0]) == 0:
+                continue
+            images, texts = batch[0][:1], tokenize(batch[1])[:1]
+            images = images.to(device)
+            texts = texts.to(device)
+            with torch.no_grad(), torch.cuda.amp.autocast():
+                image_features2, text_features2, _ = target_model(images, texts)
+            cs_2 = torch.diagonal(image_features2 @ text_features2.T)
+            evaluate_selected_nt_cs_lst_tar.extend(cs_2.detach().cpu().numpy())
+            evaluate_selected_nt_feat_lst_tar.extend(torch.cat([image_features2, text_features2], dim=1).detach().cpu())
+            break
+
+    # If dataloaders are empty/unreadable, fallback to already-selected attack
+    # member/non-member pools so evaluation can still proceed.
+    if len(evaluate_selected_t_cs_lst_tar) == 0 and len(selected_t_cs_lst_tar) > 0:
+        evaluate_selected_t_cs_lst_tar.extend(np.array(selected_t_cs_lst_tar))
+        evaluate_selected_t_feat_lst_tar.extend(selected_t_feat_lst_tar)
+    if len(evaluate_selected_nt_cs_lst_tar) == 0 and len(selected_nt_cs_lst_tar) > 0:
+        evaluate_selected_nt_cs_lst_tar.extend(np.array(selected_nt_cs_lst_tar))
+        evaluate_selected_nt_feat_lst_tar.extend(selected_nt_feat_lst_tar)
+
+    if len(evaluate_selected_t_cs_lst_tar) == 0 or len(evaluate_selected_nt_cs_lst_tar) == 0:
+        raise ValueError(
+            f"Empty evaluation feature set. members={len(evaluate_selected_t_cs_lst_tar)}, "
+            f"non_members={len(evaluate_selected_nt_cs_lst_tar)}. "
+            "Try reducing overlap filtering strictness or increasing eval-length."
+        )
 
     length_tuned = min([len(evaluate_selected_t_cs_lst_tar), len(evaluate_selected_nt_cs_lst_tar)])
 
