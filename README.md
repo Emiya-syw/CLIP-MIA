@@ -73,10 +73,10 @@ We also present a new weakly supervised attack method that leverages ground-trut
 
 ```bash
 python3 prepare_vaw_mia_csv.py \
-  --train-file /home/sunyw/cliperase_ddp/datasets/vaw/vaw_dataset/data/man_standing/train_man_standing_ori.jsonl \
+  --train-file /home/sunyw/cliperase_ddp/datasets/vaw/vaw_dataset/data/man_standing/train_man_standing_tri.jsonl \
   --test-file /home/sunyw/cliperase_ddp/datasets/vaw/vaw_dataset/data/man_standing/CFR_irr.json \
   --output-dir /home/sunyw/cliperase_ddp/datasets/vaw/vaw_dataset/data/man_standing/mia_csvs \
-  --test-image-root /home/sunyw/VL-CheckList-main/datasets/vg/VG_100K_2
+  --test-image-root /home/sunyw/cliperase_ddp/datasets/vaw/vaw_dataset/resized_pic_test
 ```
 
 2. 修改 `run_attack.sh` 里的 `CSV_DIR` 和样本数参数。
