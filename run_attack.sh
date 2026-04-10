@@ -60,6 +60,7 @@ python3 main.py \
   --csv-img-key "$CSV_IMG_KEY" \
   --csv-caption-key "$CSV_CAPTION_KEY" \
   --csv-url-key "$CSV_URL_KEY" \
+  --mia-view "image" \
   --batch-size "$BATCH_SIZE" \
   --nt-length "$NT_LENGTH" \
   --t-length "$T_LENGTH" \

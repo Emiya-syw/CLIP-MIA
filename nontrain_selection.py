@@ -12,6 +12,38 @@ from data import get_data, get_data_val
 from text_preprocessing import text_preprocessing
 
 
+def _extract_urls(batch_meta):
+    """Normalize metadata batch into a list of URL strings."""
+    if isinstance(batch_meta, dict):
+        urls = batch_meta.get("url", [])
+        if isinstance(urls, (list, tuple, np.ndarray)):
+            return [str(u) for u in urls]
+        return [str(urls)]
+
+    if isinstance(batch_meta, (list, tuple, np.ndarray)):
+        urls = []
+        for item in batch_meta:
+            if isinstance(item, dict):
+                urls.append(str(item.get("url", "")))
+            else:
+                urls.append(str(item))
+        return urls
+
+    return [str(batch_meta)]
+
+
+def _membership_scores(image_features, text_features, args):
+    if getattr(args, "mia_view", "multimodal") == "image":
+        return torch.norm(image_features, dim=1)
+    return torch.diagonal(image_features @ text_features.T)
+
+
+def _membership_features(image_features, text_features, args):
+    if getattr(args, "mia_view", "multimodal") == "image":
+        return image_features
+    return torch.cat([image_features, text_features], dim=1)
+
+
 def _load_overlap_array(filename):
     """Load overlap metadata from common project locations.
 
@@ -56,7 +88,7 @@ def select_nontrain(args, target_model, preprocess_train, preprocess_val, device
     cnt_nontrain = 0
     for i, batch in enumerate( valloader ): 
         non_train_text = [text_preprocessing(q) for q in batch[1]]            
-        non_train_url = [d['url'] for d in batch[2]]     
+        non_train_url = _extract_urls(batch[2])
 
         common = np.intersect1d(np.array(non_train_text), CC3M_LAION_commonset)
         x_ind = np.where(np.isin(np.array(non_train_text), common))[0]
@@ -75,12 +107,12 @@ def select_nontrain(args, target_model, preprocess_train, preprocess_val, device
         
         with torch.no_grad(), torch.cuda.amp.autocast():
             image_features2, text_features2, logit_scale2 = target_model(images, texts)
-        cs_2 = torch.diagonal( image_features2@text_features2.T )
+        cs_2 = _membership_scores(image_features2, text_features2, args)
         
         selected_nt_url.extend( np.array(non_train_url)[selected_ind] )
         selected_nt_txt.extend( np.array(non_train_text)[selected_ind] ) 
         selected_nt_cs_lst_tar.extend( cs_2.detach().cpu().numpy() ) 
-        selected_nt_feat_lst_tar.extend( torch.cat([image_features2, text_features2], dim=1).detach().cpu() )
+        selected_nt_feat_lst_tar.extend(_membership_features(image_features2, text_features2, args).detach().cpu())
         
         if cnt_nontrain >= length:
             break
@@ -104,7 +136,7 @@ def select_nontrain(args, target_model, preprocess_train, preprocess_val, device
     for i, batch in enumerate( cc12m_valoader ): 
 
         non_train_text = [text_preprocessing(q) for q in batch[1]]            
-        non_train_url = [d['url'] for d in batch[2]]     
+        non_train_url = _extract_urls(batch[2])
 
         common = np.intersect1d(np.array(non_train_text), CC12M_LAION_commonset)
         x_ind = np.where(np.isin(np.array(non_train_text), common))[0]
@@ -122,12 +154,12 @@ def select_nontrain(args, target_model, preprocess_train, preprocess_val, device
 
         with torch.no_grad(), torch.cuda.amp.autocast():
             image_features2, text_features2, logit_scale2 = target_model(images, texts)  
-        cs_2 = torch.diagonal(image_features2@text_features2.T)
+        cs_2 = _membership_scores(image_features2, text_features2, args)
         
         selected_nt_url.extend( np.array(non_train_url)[selected_ind] )
         selected_nt_txt.extend( np.array(non_train_text)[selected_ind] )
         selected_nt_cs_lst_tar.extend( cs_2.detach().cpu().numpy() ) 
-        selected_nt_feat_lst_tar.extend( torch.cat([image_features2, text_features2], dim=1).detach().cpu() )
+        selected_nt_feat_lst_tar.extend(_membership_features(image_features2, text_features2, args).detach().cpu())
         
         if cnt_nontrain >= length:
             break
@@ -149,7 +181,7 @@ def select_nontrain(args, target_model, preprocess_train, preprocess_val, device
     for i, batch in enumerate( mscoco_valoader ): 
         
         non_train_text = [text_preprocessing(q) for q in batch[1]]   
-        non_train_url = [d['url'] for d in batch[2]]     
+        non_train_url = _extract_urls(batch[2])
 
         common = np.intersect1d(np.array(non_train_text), MSCOCO_LAION_commonset)
         x_ind = np.where(np.isin(np.array(non_train_text), common))[0]
@@ -166,12 +198,12 @@ def select_nontrain(args, target_model, preprocess_train, preprocess_val, device
 
         with torch.no_grad(), torch.cuda.amp.autocast():
             image_features2, text_features2, logit_scale2 = target_model(images, texts)  
-        cs_2 = torch.diagonal( image_features2@text_features2.T )
+        cs_2 = _membership_scores(image_features2, text_features2, args)
 
         selected_nt_url.extend( np.array(non_train_url)[selected_ind] )
         selected_nt_txt.extend( np.array(non_train_text)[selected_ind] )
         selected_nt_cs_lst_tar.extend( cs_2.detach().cpu().numpy() ) 
-        selected_nt_feat_lst_tar.extend( torch.cat([image_features2, text_features2], dim=1).detach().cpu() )
+        selected_nt_feat_lst_tar.extend(_membership_features(image_features2, text_features2, args).detach().cpu())
 
         if cnt_nontrain >= length:
             break
