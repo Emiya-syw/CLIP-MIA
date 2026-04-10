@@ -177,7 +177,7 @@ def main(args, device):
 
         ## Train       
         evlauate_train_text_lst = [text_preprocessing(q) for q in batch[1]]   
-        evlauate_train_url = [d['url'] for d in batch[2]]             
+        evlauate_train_url = _extract_urls(batch[2])
 
         common = np.intersect1d(np.array(evlauate_train_text_lst), np.array(selected_t_txt)) ## duplication check with [attack model]train data
         x_ind = np.where(np.isin(np.array(evlauate_train_text_lst), common))[0]
@@ -225,7 +225,7 @@ def main(args, device):
     for i, batch in enumerate( evaluate_valloader ): 
 
         evlauate_non_train_text_lst = [text_preprocessing(q) for q in batch[1]]   
-        evlauate_non_train_url = [d['url'] for d in batch[2]]             
+        evlauate_non_train_url = _extract_urls(batch[2])
 
         common, _, _ = np.intersect1d(np.array(evlauate_non_train_text_lst), CC3M_LAION_commonset, return_indices=True) ## duplication check with train data
         x_ind = np.where(np.isin(np.array(evlauate_non_train_text_lst), common))[0]    
@@ -281,7 +281,7 @@ def main(args, device):
     for i, batch in enumerate( cc12m_valoader ): 
 
         evlauate_non_train_text_lst = [text_preprocessing(q) for q in batch[1]]   
-        evlauate_non_train_url = [d['url'] for d in batch[2]]             
+        evlauate_non_train_url = _extract_urls(batch[2])
         
         common, _, _ = np.intersect1d(np.array(evlauate_non_train_text_lst), CC12M_LAION_commonset, return_indices=True)
         x_ind = np.where(np.isin(np.array(evlauate_non_train_text_lst), common))[0]    
@@ -337,7 +337,7 @@ def main(args, device):
     for i, batch in enumerate( mscoco_valoader ): 
 
         evlauate_non_train_text_lst = [text_preprocessing(q) for q in batch[1]]   
-        evlauate_non_train_url = [d['url'] for d in batch[2]]             
+        evlauate_non_train_url = _extract_urls(batch[2])
 
         common, _, _ = np.intersect1d(np.array(evlauate_non_train_text_lst), MSCOCO_LAION_commonset, return_indices=True)
         x_ind = np.where(np.isin(np.array(evlauate_non_train_text_lst), common))[0]    
