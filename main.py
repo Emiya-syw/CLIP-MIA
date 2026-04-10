@@ -9,6 +9,7 @@ import argparse
 import random
 import requests
 import sys
+from pathlib import Path
 from torchvision.transforms import Normalize, Compose, RandomResizedCrop, InterpolationMode, ToTensor, Resize, CenterCrop, \
 RandomRotation, RandomAffine, AugMix, GaussianBlur, RandomHorizontalFlip, RandomVerticalFlip, RandomAutocontrast, \
 RandomAdjustSharpness, RandomPosterize, RandomResizedCrop, ColorJitter
@@ -42,6 +43,21 @@ import open_clip
 from open_clip import tokenizer, tokenize
 from open_clip import create_model_and_transforms, trace_model
 from open_clip import tokenizer, tokenize
+
+
+def _load_overlap_array(filename):
+    candidate_paths = [
+        Path.cwd() / filename,
+        Path(__file__).resolve().parent / filename,
+        Path(__file__).resolve().parent / "data" / filename,
+    ]
+    for candidate in candidate_paths:
+        if candidate.exists():
+            return np.load(candidate)
+    searched = ", ".join(str(p) for p in candidate_paths)
+    print(f"[WARN] overlap metadata not found: {filename}. Continue without overlap filtering. searched={searched}")
+    return np.array([], dtype=str)
+
 
 def seed_everything(seed=0):
     random.seed(seed)
@@ -138,19 +154,19 @@ def main(args, device):
     #################################################
     ## cal feature info 
 
-    CC12M_LAION_commonset = np.load('./CC12M_LAION_commonset.npy')
-    CC12M_LAION_unqiue_commonset = np.load('./CC12M_LAION_unqiue_commonset.npy')
-    CC12M_LAION_url_commonset = np.load('./CC12M_LAION_url_commonset.npy')
+    CC12M_LAION_commonset = _load_overlap_array('CC12M_LAION_commonset.npy')
+    CC12M_LAION_unqiue_commonset = _load_overlap_array('CC12M_LAION_unqiue_commonset.npy')
+    CC12M_LAION_url_commonset = _load_overlap_array('CC12M_LAION_url_commonset.npy')
 
-    CC3M_LAION_commonset = np.load('./CC3M_LAION_commonset.npy')
-    CC3M_LAION_unqiue_commonset = np.load('./CC3M_LAION_unqiue_commonset.npy')
-    CC3M_LAION_url_commonset = np.load('./CC3M_LAION_url_commonset.npy')
+    CC3M_LAION_commonset = _load_overlap_array('CC3M_LAION_commonset.npy')
+    CC3M_LAION_unqiue_commonset = _load_overlap_array('CC3M_LAION_unqiue_commonset.npy')
+    CC3M_LAION_url_commonset = _load_overlap_array('CC3M_LAION_url_commonset.npy')
 
-    MSCOCO_LAION_commonset = np.load('./MSCOCO_LAION_commonset.npy')
-    MSCOCO_LAION_unqiue_commonset = np.load('./MSCOCO_LAION_unqiue_commonset.npy')
+    MSCOCO_LAION_commonset = _load_overlap_array('MSCOCO_LAION_commonset.npy')
+    MSCOCO_LAION_unqiue_commonset = _load_overlap_array('MSCOCO_LAION_unqiue_commonset.npy')
 
-    SBU_LAION_commonset = np.load('./SBU_LAION_commonset.npy')
-    SBU_LAION_unqiue_commonset = np.load('./SBU_LAION_unqiue_commonset.npy')
+    SBU_LAION_commonset = _load_overlap_array('SBU_LAION_commonset.npy')
+    SBU_LAION_unqiue_commonset = _load_overlap_array('SBU_LAION_unqiue_commonset.npy')
 
     import time
     start_time = time.time()
