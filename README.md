@@ -67,18 +67,26 @@ We also present a new weakly supervised attack method that leverages ground-trut
 
 ### Quick Run Script
 
-You can launch the attack pipeline with the helper script:
+使用最简单脚本运行：
 
 ```bash
-bash run_attack.sh --model ViT-B-32
+bash run_attack.sh ViT-B-32
 ```
 
-The script also supports optional environment variables:
+传参方式（第一个参数是模型名，后续参数会原样传给 `main.py`）：
 
-- `CONDA_ENV`: conda environment name to activate before execution.
-- `PYTHON_BIN`: python executable (default: `python3`).
-- `MODEL_NAME`: default model passed to `--model` (default: `ViT-B-32`).
-- `EXTRA_ARGS`: additional `main.py` arguments appended to the command.
+```bash
+bash run_attack.sh ViT-B-32 --batch-size 256 --nt-length 1000 --t-length 1000 --eval-length 2000
+```
+
+常用参数作用：
+
+- `ViT-B-32`（位置参数1）：目标 CLIP 模型名（也可用 `ViT-B-16`、`ViT-L-14`、`RN50`）。
+- `--batch-size`：批大小。
+- `--nt-length`：非成员采样长度。
+- `--t-length`：伪成员采样长度。
+- `--eval-length`：评估采样长度。
+- `--train-data` / `--val-data`：数据路径。
 
 &nbsp;
 

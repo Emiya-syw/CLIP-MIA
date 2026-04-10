@@ -1,37 +1,36 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Usage:
-#   bash run_attack.sh --model ViT-B-32 [other main.py args...]
+# 最简单运行脚本：用于启动 main.py
 #
-# Optional environment variables:
-#   PYTHON_BIN            Python executable (default: python3)
-#   MODEL_NAME            CLIP model name passed to --model (default: ViT-B-32)
-#   CONDA_ENV             Conda env name to activate before running (optional)
-#   EXTRA_ARGS            Extra args appended after CLI args (optional)
+# 用法示例：
+#   bash run_attack.sh ViT-B-32
+#   bash run_attack.sh ViT-B-32 --batch-size 256 --nt-length 1000
+#
+# 参数说明：
+#   参数1: MODEL_NAME（必填）
+#     - 作用：指定要攻击的 CLIP 模型名称。
+#     - 常见值：ViT-B-32 / ViT-B-16 / ViT-L-14 / RN50
+#
+#   参数2及之后: 透传给 main.py 的额外参数（可选）
+#     - 作用：覆盖 main.py / params.py 中的默认超参数与数据路径。
+#     - 示例：
+#         --batch-size 256        # 每批样本数
+#         --nt-length 1000        # 非成员样本采样数
+#         --t-length 1000         # 伪成员样本采样数
+#         --eval-length 2000      # 评估样本数
+#         --train-data <path>     # 训练数据路径
+#         --val-data <path>       # 验证数据路径
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$ROOT_DIR"
-
-if [[ -n "${CONDA_ENV:-}" ]]; then
-  if command -v conda >/dev/null 2>&1; then
-    # shellcheck disable=SC1091
-    source "$(conda info --base)/etc/profile.d/conda.sh"
-    conda activate "$CONDA_ENV"
-  else
-    echo "[WARN] CONDA_ENV is set but conda is not available. Continuing without activation." >&2
-  fi
-fi
-
-PYTHON_BIN="${PYTHON_BIN:-python3}"
-MODEL_NAME="${MODEL_NAME:-ViT-B-32}"
-
-if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
-  echo "[ERROR] Python executable '$PYTHON_BIN' not found." >&2
+if [[ $# -lt 1 ]]; then
+  echo "用法: bash run_attack.sh <MODEL_NAME> [main.py 的其他参数...]" >&2
   exit 1
 fi
 
-echo "[INFO] Running attack pipeline from: $ROOT_DIR"
-echo "[INFO] Command: $PYTHON_BIN main.py --model $MODEL_NAME $* ${EXTRA_ARGS:-}"
+MODEL_NAME="$1"
+shift
 
-exec "$PYTHON_BIN" main.py --model "$MODEL_NAME" "$@" ${EXTRA_ARGS:-}
+# 执行主程序：
+# --model 使用上面传入的 MODEL_NAME
+# "$@" 会把其余参数原样传给 main.py
+python3 main.py --model "$MODEL_NAME" "$@"
