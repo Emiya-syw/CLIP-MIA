@@ -13,6 +13,18 @@ from text_preprocessing import text_preprocessing
 from nontrain_selection import _extract_urls
 
 
+def _select_train_indices(cs_scores, threshold):
+    """Select pseudo-member indices with a safe fallback.
+
+    If no sample passes the threshold, keep the highest-scoring sample so the
+    downstream attack model has at least minimal member data.
+    """
+    train_ind = torch.where(cs_scores >= threshold)[0]
+    if train_ind.numel() == 0 and cs_scores.numel() > 0:
+        train_ind = torch.tensor([int(torch.argmax(cs_scores).item())], device=cs_scores.device)
+    return train_ind.detach().cpu()
+
+
 def _load_overlap_array(filename):
     candidate_paths = [
         Path.cwd() / filename,
@@ -65,8 +77,7 @@ def select_pseudotrain(args, target_model, selected_nt_txt, selected_nt_url, dat
         cs_2 = torch.diagonal(image_features2@text_features2.T)    
 
         ## Batch-wise approach     
-        train_ind = torch.where(cs_2 >= train_threshold)[0] ## we do assume the knowledge for non-train data distribution, so we only sample train data samples here
-        train_ind = train_ind.detach().cpu()
+        train_ind = _select_train_indices(cs_2, train_threshold) ## we do assume the knowledge for non-train data distribution, so we only sample train data samples here
         
         selected_t_txt.extend( np.array(train_text)[selected_ind][train_ind.numpy()] ) 
         selected_t_url.extend( np.array(train_url)[selected_ind][train_ind.numpy()] )
@@ -124,8 +135,7 @@ def select_pseudotrain(args, target_model, selected_nt_txt, selected_nt_url, dat
             image_features2, text_features2, logit_scale2 = target_model(images, texts)
         cs_2 = torch.diagonal(image_features2@text_features2.T)
 
-        train_ind = torch.where(cs_2 >= train_threshold)[0] 
-        train_ind = train_ind.detach().cpu()
+        train_ind = _select_train_indices(cs_2, train_threshold)
         
         selected_t_txt.extend( np.array(train_text)[selected_ind][train_ind.numpy()] ) 
         selected_t_url.extend( np.array(train_url)[selected_ind][train_ind.numpy()] )
@@ -178,8 +188,7 @@ def select_pseudotrain(args, target_model, selected_nt_txt, selected_nt_url, dat
         with torch.no_grad(), torch.cuda.amp.autocast():
             image_features2, text_features2, logit_scale2 = target_model(images, texts)
         cs_2 = torch.diagonal(image_features2@text_features2.T)
-        train_ind = torch.where(cs_2 >= train_threshold)[0] 
-        train_ind = train_ind.detach().cpu()
+        train_ind = _select_train_indices(cs_2, train_threshold)
 
         selected_t_txt.extend( np.array(train_text)[selected_ind][train_ind.numpy()] ) 
         selected_t_url.extend( np.array(train_url)[selected_ind][train_ind.numpy()] )
@@ -230,8 +239,7 @@ def select_pseudotrain(args, target_model, selected_nt_txt, selected_nt_url, dat
         with torch.no_grad(), torch.cuda.amp.autocast():
             image_features2, text_features2, logit_scale2 = target_model(images, texts)
         cs_2 = torch.diagonal(image_features2@text_features2.T)
-        train_ind = torch.where(cs_2 >= train_threshold)[0] 
-        train_ind = train_ind.detach().cpu()
+        train_ind = _select_train_indices(cs_2, train_threshold)
         
         selected_t_txt.extend( np.array(train_text)[selected_ind][train_ind.numpy()] )
         selected_t_url.extend( np.array(train_url)[selected_ind][train_ind.numpy()] )
