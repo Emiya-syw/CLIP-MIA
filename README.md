@@ -67,26 +67,17 @@ We also present a new weakly supervised attack method that leverages ground-trut
 
 ### Quick Run Script
 
-使用最简单脚本运行：
+现在参数都写在 `run_attack.sh` 里，不需要命令行传参。
 
 ```bash
-bash run_attack.sh ViT-B-32
+bash run_attack.sh
 ```
 
-传参方式（第一个参数是模型名，后续参数会原样传给 `main.py`）：
+使用方式：
 
-```bash
-bash run_attack.sh ViT-B-32 --batch-size 256 --nt-length 1000 --t-length 1000 --eval-length 2000
-```
-
-常用参数作用：
-
-- `ViT-B-32`（位置参数1）：目标 CLIP 模型名（也可用 `ViT-B-16`、`ViT-L-14`、`RN50`）。
-- `--batch-size`：批大小。
-- `--nt-length`：非成员采样长度。
-- `--t-length`：伪成员采样长度。
-- `--eval-length`：评估采样长度。
-- `--train-data` / `--val-data`：数据路径。
+1. 打开 `run_attack.sh`。
+2. 修改脚本顶部的模型名、采样参数和数据路径（例如 `MODEL_NAME`、`NT_LENGTH`、`TRAIN_DATA` 等）。
+3. 保存后直接执行 `bash run_attack.sh`。
 
 &nbsp;
 
