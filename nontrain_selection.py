@@ -32,6 +32,18 @@ def _extract_urls(batch_meta):
     return [str(batch_meta)]
 
 
+def _membership_scores(image_features, text_features, args):
+    if getattr(args, "mia_view", "multimodal") == "image":
+        return torch.norm(image_features, dim=1)
+    return torch.diagonal(image_features @ text_features.T)
+
+
+def _membership_features(image_features, text_features, args):
+    if getattr(args, "mia_view", "multimodal") == "image":
+        return image_features
+    return torch.cat([image_features, text_features], dim=1)
+
+
 def _load_overlap_array(filename):
     """Load overlap metadata from common project locations.
 
@@ -95,12 +107,12 @@ def select_nontrain(args, target_model, preprocess_train, preprocess_val, device
         
         with torch.no_grad(), torch.cuda.amp.autocast():
             image_features2, text_features2, logit_scale2 = target_model(images, texts)
-        cs_2 = torch.diagonal( image_features2@text_features2.T )
+        cs_2 = _membership_scores(image_features2, text_features2, args)
         
         selected_nt_url.extend( np.array(non_train_url)[selected_ind] )
         selected_nt_txt.extend( np.array(non_train_text)[selected_ind] ) 
         selected_nt_cs_lst_tar.extend( cs_2.detach().cpu().numpy() ) 
-        selected_nt_feat_lst_tar.extend( torch.cat([image_features2, text_features2], dim=1).detach().cpu() )
+        selected_nt_feat_lst_tar.extend(_membership_features(image_features2, text_features2, args).detach().cpu())
         
         if cnt_nontrain >= length:
             break
@@ -142,12 +154,12 @@ def select_nontrain(args, target_model, preprocess_train, preprocess_val, device
 
         with torch.no_grad(), torch.cuda.amp.autocast():
             image_features2, text_features2, logit_scale2 = target_model(images, texts)  
-        cs_2 = torch.diagonal(image_features2@text_features2.T)
+        cs_2 = _membership_scores(image_features2, text_features2, args)
         
         selected_nt_url.extend( np.array(non_train_url)[selected_ind] )
         selected_nt_txt.extend( np.array(non_train_text)[selected_ind] )
         selected_nt_cs_lst_tar.extend( cs_2.detach().cpu().numpy() ) 
-        selected_nt_feat_lst_tar.extend( torch.cat([image_features2, text_features2], dim=1).detach().cpu() )
+        selected_nt_feat_lst_tar.extend(_membership_features(image_features2, text_features2, args).detach().cpu())
         
         if cnt_nontrain >= length:
             break
@@ -186,12 +198,12 @@ def select_nontrain(args, target_model, preprocess_train, preprocess_val, device
 
         with torch.no_grad(), torch.cuda.amp.autocast():
             image_features2, text_features2, logit_scale2 = target_model(images, texts)  
-        cs_2 = torch.diagonal( image_features2@text_features2.T )
+        cs_2 = _membership_scores(image_features2, text_features2, args)
 
         selected_nt_url.extend( np.array(non_train_url)[selected_ind] )
         selected_nt_txt.extend( np.array(non_train_text)[selected_ind] )
         selected_nt_cs_lst_tar.extend( cs_2.detach().cpu().numpy() ) 
-        selected_nt_feat_lst_tar.extend( torch.cat([image_features2, text_features2], dim=1).detach().cpu() )
+        selected_nt_feat_lst_tar.extend(_membership_features(image_features2, text_features2, args).detach().cpu())
 
         if cnt_nontrain >= length:
             break

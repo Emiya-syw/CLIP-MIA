@@ -10,7 +10,7 @@ import open_clip
 from open_clip import tokenizer, tokenize
 from data import get_data, get_data_val
 from text_preprocessing import text_preprocessing
-from nontrain_selection import _extract_urls
+from nontrain_selection import _extract_urls, _membership_features, _membership_scores
 
 
 def _select_train_indices(cs_scores, threshold):
@@ -74,7 +74,7 @@ def select_pseudotrain(args, target_model, selected_nt_txt, selected_nt_url, dat
 
         with torch.no_grad(), torch.cuda.amp.autocast():
             image_features2, text_features2, logit_scale2 = target_model(images, texts)  
-        cs_2 = torch.diagonal(image_features2@text_features2.T)    
+        cs_2 = _membership_scores(image_features2, text_features2, args)
 
         ## Batch-wise approach     
         train_ind = _select_train_indices(cs_2, train_threshold) ## we do assume the knowledge for non-train data distribution, so we only sample train data samples here
@@ -82,7 +82,7 @@ def select_pseudotrain(args, target_model, selected_nt_txt, selected_nt_url, dat
         selected_t_txt.extend( np.array(train_text)[selected_ind][train_ind.numpy()] ) 
         selected_t_url.extend( np.array(train_url)[selected_ind][train_ind.numpy()] )
         selected_t_cs_lst_tar.extend( cs_2[train_ind].detach().cpu().numpy() ) 
-        selected_t_feat_lst_tar.extend( torch.cat([image_features2, text_features2], dim=1)[train_ind].detach().cpu() )    
+        selected_t_feat_lst_tar.extend(_membership_features(image_features2, text_features2, args)[train_ind].detach().cpu())
 
         if cnt_train >= length:
             break
@@ -133,14 +133,14 @@ def select_pseudotrain(args, target_model, selected_nt_txt, selected_nt_url, dat
 
         with torch.no_grad(), torch.cuda.amp.autocast():
             image_features2, text_features2, logit_scale2 = target_model(images, texts)
-        cs_2 = torch.diagonal(image_features2@text_features2.T)
+        cs_2 = _membership_scores(image_features2, text_features2, args)
 
         train_ind = _select_train_indices(cs_2, train_threshold)
         
         selected_t_txt.extend( np.array(train_text)[selected_ind][train_ind.numpy()] ) 
         selected_t_url.extend( np.array(train_url)[selected_ind][train_ind.numpy()] )
         selected_t_cs_lst_tar.extend( cs_2[train_ind].detach().cpu().numpy() ) 
-        selected_t_feat_lst_tar.extend( torch.cat([image_features2, text_features2], dim=1)[train_ind].detach().cpu() )    
+        selected_t_feat_lst_tar.extend(_membership_features(image_features2, text_features2, args)[train_ind].detach().cpu())
 
         if cnt_nontrain >= length:
             break
@@ -187,13 +187,13 @@ def select_pseudotrain(args, target_model, selected_nt_txt, selected_nt_url, dat
 
         with torch.no_grad(), torch.cuda.amp.autocast():
             image_features2, text_features2, logit_scale2 = target_model(images, texts)
-        cs_2 = torch.diagonal(image_features2@text_features2.T)
+        cs_2 = _membership_scores(image_features2, text_features2, args)
         train_ind = _select_train_indices(cs_2, train_threshold)
 
         selected_t_txt.extend( np.array(train_text)[selected_ind][train_ind.numpy()] ) 
         selected_t_url.extend( np.array(train_url)[selected_ind][train_ind.numpy()] )
         selected_t_cs_lst_tar.extend( cs_2[train_ind].detach().cpu().numpy() ) 
-        selected_t_feat_lst_tar.extend( torch.cat([image_features2, text_features2], dim=1)[train_ind].detach().cpu() )    
+        selected_t_feat_lst_tar.extend(_membership_features(image_features2, text_features2, args)[train_ind].detach().cpu())
         
         if cnt_nontrain >= length:
             break
@@ -238,13 +238,13 @@ def select_pseudotrain(args, target_model, selected_nt_txt, selected_nt_url, dat
         
         with torch.no_grad(), torch.cuda.amp.autocast():
             image_features2, text_features2, logit_scale2 = target_model(images, texts)
-        cs_2 = torch.diagonal(image_features2@text_features2.T)
+        cs_2 = _membership_scores(image_features2, text_features2, args)
         train_ind = _select_train_indices(cs_2, train_threshold)
         
         selected_t_txt.extend( np.array(train_text)[selected_ind][train_ind.numpy()] )
         selected_t_url.extend( np.array(train_url)[selected_ind][train_ind.numpy()] )
         selected_t_cs_lst_tar.extend( cs_2[train_ind].detach().cpu().numpy() ) 
-        selected_t_feat_lst_tar.extend( torch.cat([image_features2, text_features2], dim=1)[train_ind].detach().cpu() )    
+        selected_t_feat_lst_tar.extend(_membership_features(image_features2, text_features2, args)[train_ind].detach().cpu())
        
         if cnt_nontrain >= length:
             break

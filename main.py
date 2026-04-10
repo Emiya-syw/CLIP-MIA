@@ -22,7 +22,7 @@ import util
 from params import *
 from text_preprocessing import text_preprocessing
 from nontrain_selection import *
-from nontrain_selection import _extract_urls
+from nontrain_selection import _extract_urls, _membership_features, _membership_scores
 from pseudotrain_selection import *
 from train_attackmodel import train_attackmodel
 from sklearn.model_selection import train_test_split
@@ -217,10 +217,10 @@ def main(args, device):
 
         with torch.no_grad(), torch.cuda.amp.autocast():
             image_features2, text_features2, logit_scale2 = target_model(images, texts)    
-        cs_2 = torch.diagonal(image_features2@text_features2.T)
+        cs_2 = _membership_scores(image_features2, text_features2, args)
 
         evaluate_selected_t_cs_lst_tar.extend( cs_2.detach().cpu().numpy() )  
-        evaluate_selected_t_feat_lst_tar.extend( torch.cat([image_features2, text_features2], dim=1).detach().cpu() )
+        evaluate_selected_t_feat_lst_tar.extend(_membership_features(image_features2, text_features2, args).detach().cpu())
 
         if evaluate_cnt_train >= evaluate_length:
             break
@@ -266,10 +266,10 @@ def main(args, device):
 
         with torch.no_grad(), torch.cuda.amp.autocast():
             image_features2, text_features2, logit_scale2 = target_model(images, texts)  
-        cs_2 = torch.diagonal(image_features2@text_features2.T)     
+        cs_2 = _membership_scores(image_features2, text_features2, args)
 
         evaluate_selected_nt_cs_lst_tar.extend( cs_2.detach().cpu().numpy() ) 
-        evaluate_selected_nt_feat_lst_tar.extend( torch.cat([image_features2, text_features2], dim=1).detach().cpu() )
+        evaluate_selected_nt_feat_lst_tar.extend(_membership_features(image_features2, text_features2, args).detach().cpu())
         
         if evaluate_cnt_val >= int(evaluate_length/2):
             break
@@ -319,10 +319,10 @@ def main(args, device):
 
         with torch.no_grad(), torch.cuda.amp.autocast():
             image_features2, text_features2, logit_scale2 = target_model(images, texts)  
-        cs_2 = torch.diagonal(image_features2@text_features2.T)
+        cs_2 = _membership_scores(image_features2, text_features2, args)
 
         evaluate_selected_nt_cs_lst_tar.extend( cs_2.detach().cpu().numpy() ) 
-        evaluate_selected_nt_feat_lst_tar.extend( torch.cat([image_features2, text_features2], dim=1).detach().cpu() )
+        evaluate_selected_nt_feat_lst_tar.extend(_membership_features(image_features2, text_features2, args).detach().cpu())
         
         if evaluate_cnt_val >= int(evaluate_length/2):
             break
@@ -370,10 +370,10 @@ def main(args, device):
 
         with torch.no_grad(), torch.cuda.amp.autocast():
             image_features2, text_features2, logit_scale2 = target_model(images, texts)  
-        cs_2 = torch.diagonal(image_features2@text_features2.T)
+        cs_2 = _membership_scores(image_features2, text_features2, args)
 
         evaluate_selected_nt_cs_lst_tar.extend( cs_2.detach().cpu().numpy() ) 
-        evaluate_selected_nt_feat_lst_tar.extend( torch.cat([image_features2, text_features2], dim=1).detach().cpu() )
+        evaluate_selected_nt_feat_lst_tar.extend(_membership_features(image_features2, text_features2, args).detach().cpu())
         
         if evaluate_cnt_val >= int(evaluate_length/2):
             break
@@ -398,9 +398,9 @@ def main(args, device):
             texts = texts.to(device)
             with torch.no_grad(), torch.cuda.amp.autocast():
                 image_features2, text_features2, _ = target_model(images, texts)
-            cs_2 = torch.diagonal(image_features2 @ text_features2.T)
+            cs_2 = _membership_scores(image_features2, text_features2, args)
             evaluate_selected_t_cs_lst_tar.extend(cs_2.detach().cpu().numpy())
-            evaluate_selected_t_feat_lst_tar.extend(torch.cat([image_features2, text_features2], dim=1).detach().cpu())
+            evaluate_selected_t_feat_lst_tar.extend(_membership_features(image_features2, text_features2, args).detach().cpu())
             break
 
     if len(evaluate_selected_nt_cs_lst_tar) == 0:
@@ -412,9 +412,9 @@ def main(args, device):
             texts = texts.to(device)
             with torch.no_grad(), torch.cuda.amp.autocast():
                 image_features2, text_features2, _ = target_model(images, texts)
-            cs_2 = torch.diagonal(image_features2 @ text_features2.T)
+            cs_2 = _membership_scores(image_features2, text_features2, args)
             evaluate_selected_nt_cs_lst_tar.extend(cs_2.detach().cpu().numpy())
-            evaluate_selected_nt_feat_lst_tar.extend(torch.cat([image_features2, text_features2], dim=1).detach().cpu())
+            evaluate_selected_nt_feat_lst_tar.extend(_membership_features(image_features2, text_features2, args).detach().cpu())
             break
 
     # If dataloaders are empty/unreadable, fallback to already-selected attack

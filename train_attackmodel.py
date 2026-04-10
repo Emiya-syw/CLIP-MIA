@@ -107,16 +107,7 @@ def train_attackmodel(args, selected_t_feat_lst_tar, selected_nt_feat_lst_tar, t
     Y1 = torch.ones(len(X1)).to(dtype = torch.long)
     Y2 = torch.zeros(len(X2)).to(dtype = torch.long)
     ##################################################    
-    if args.model == "ViT-B-32":
-        feat_dim = 1024
-    elif args.model == "ViT-B-16":
-        feat_dim = 1024
-    elif args.model == "ViT-L-14":
-        feat_dim = 1536
-    elif args.model == "RN50":
-        feat_dim = 2048
-    elif args.model == "RN101":
-        feat_dim = 1024
+    feat_dim = X1.shape[1]
         
     attack_model = Attack_M(feat_dim).to(device)
 
