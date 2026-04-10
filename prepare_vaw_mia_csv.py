@@ -27,6 +27,7 @@ import argparse
 import csv
 import json
 from pathlib import Path
+from typing import Optional
 
 
 def read_json_records(path: Path):
@@ -55,7 +56,7 @@ def read_json_records(path: Path):
     return items
 
 
-def build_filepath(sample, image_root: Path | None):
+def build_filepath(sample, image_root: Optional[Path]):
     if sample.get("crop_path"):
         return str(sample["crop_path"])
     instance_id = sample.get("instance_id")
@@ -69,7 +70,7 @@ def build_filepath(sample, image_root: Path | None):
     raise ValueError(f"Cannot infer image path for sample: {sample}")
 
 
-def to_row(sample, image_root: Path | None):
+def to_row(sample, image_root: Optional[Path]):
     caption = sample.get("positive_caption") or sample.get("caption")
     if not caption:
         raise ValueError(f"Missing caption text in sample: {sample}")
