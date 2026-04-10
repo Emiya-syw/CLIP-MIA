@@ -64,6 +64,22 @@ We also present a new weakly supervised attack method that leverages ground-trut
 
    Run `main.py --model ViT-B-32` (with other arguments).
 
+
+### Quick Run Script
+
+You can launch the attack pipeline with the helper script:
+
+```bash
+bash run_attack.sh --model ViT-B-32
+```
+
+The script also supports optional environment variables:
+
+- `CONDA_ENV`: conda environment name to activate before execution.
+- `PYTHON_BIN`: python executable (default: `python3`).
+- `MODEL_NAME`: default model passed to `--model` (default: `ViT-B-32`).
+- `EXTRA_ARGS`: additional `main.py` arguments appended to the command.
+
 &nbsp;
 
 For any questions, please contact [myeongseob@vt.edu](mailto:myeongseob@vt.edu).
