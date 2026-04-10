@@ -223,6 +223,12 @@ def parse_args(args):
         help="For csv-like datasets, the name of the key for the captions."
     )
     parser.add_argument(
+        "--csv-url-key",
+        type=str,
+        default="url",
+        help="For csv-like datasets, the name of the key for unique sample id / url metadata.",
+    )
+    parser.add_argument(
         "--imagenet-val",
         type=str,
         default=None,
@@ -571,4 +577,3 @@ def parse_args(args):
             setattr(args, name, val)
 
     return args
-
