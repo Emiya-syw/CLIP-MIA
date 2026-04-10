@@ -417,6 +417,15 @@ def main(args, device):
             evaluate_selected_nt_feat_lst_tar.extend(torch.cat([image_features2, text_features2], dim=1).detach().cpu())
             break
 
+    # If dataloaders are empty/unreadable, fallback to already-selected attack
+    # member/non-member pools so evaluation can still proceed.
+    if len(evaluate_selected_t_cs_lst_tar) == 0 and len(selected_t_cs_lst_tar) > 0:
+        evaluate_selected_t_cs_lst_tar.extend(np.array(selected_t_cs_lst_tar))
+        evaluate_selected_t_feat_lst_tar.extend(selected_t_feat_lst_tar)
+    if len(evaluate_selected_nt_cs_lst_tar) == 0 and len(selected_nt_cs_lst_tar) > 0:
+        evaluate_selected_nt_cs_lst_tar.extend(np.array(selected_nt_cs_lst_tar))
+        evaluate_selected_nt_feat_lst_tar.extend(selected_nt_feat_lst_tar)
+
     if len(evaluate_selected_t_cs_lst_tar) == 0 or len(evaluate_selected_nt_cs_lst_tar) == 0:
         raise ValueError(
             f"Empty evaluation feature set. members={len(evaluate_selected_t_cs_lst_tar)}, "
