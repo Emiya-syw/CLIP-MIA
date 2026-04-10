@@ -395,7 +395,8 @@ def get_csv_dataset(args, preprocess_fn, is_train, epoch=0):
         url_key=args.csv_url_key,
         sep=args.csv_separator)
     num_samples = len(dataset)
-    sampler = DistributedSampler(dataset) if args.distributed and is_train else None
+    is_distributed = getattr(args, "distributed", False)
+    sampler = DistributedSampler(dataset) if is_distributed and is_train else None
     shuffle = is_train and sampler is None
     
     dataloader = DataLoader(
@@ -438,7 +439,8 @@ def get_synthetic_dataset(args, preprocess_fn, is_train, epoch=0):
     dataset = SyntheticDataset(
         transform=preprocess_fn, image_size=image_size, dataset_size=args.train_num_samples)
     num_samples = len(dataset)
-    sampler = DistributedSampler(dataset) if args.distributed and is_train else None
+    is_distributed = getattr(args, "distributed", False)
+    sampler = DistributedSampler(dataset) if is_distributed and is_train else None
     shuffle = is_train and sampler is None
 
     dataloader = DataLoader(
@@ -541,7 +543,8 @@ def get_my_dataset_fn(args, imgs, texts, preprocess_fn, is_train):
         preprocess_fn
         )
     num_samples = len(dataset)
-    sampler = DistributedSampler(dataset) if args.distributed and is_train else None
+    is_distributed = getattr(args, "distributed", False)
+    sampler = DistributedSampler(dataset) if is_distributed and is_train else None
     shuffle = is_train and sampler is None
     
     dataloader = DataLoader(
