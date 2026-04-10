@@ -40,12 +40,17 @@ def read_json_records(path: Path):
     if not raw:
         return []
     if raw[0] in ("[", "{"):
-        obj = json.loads(raw)
-        if isinstance(obj, list):
-            return obj
-        if isinstance(obj, dict):
-            return [obj]
-        raise ValueError(f"Unsupported JSON root type: {type(obj)}")
+        # Try standard JSON first; if it fails (e.g., multi-line JSONL),
+        # we fall back to line-by-line parsing below.
+        try:
+            obj = json.loads(raw)
+            if isinstance(obj, list):
+                return obj
+            if isinstance(obj, dict):
+                return [obj]
+            raise ValueError(f"Unsupported JSON root type: {type(obj)}")
+        except json.JSONDecodeError:
+            pass
 
     items = []
     for line in raw.splitlines():
