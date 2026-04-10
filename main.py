@@ -387,6 +387,36 @@ def main(args, device):
 
     ################################################## random sampling
 
+    # Final safety net: if filtering removed all members/non-members in eval,
+    # backfill one sample directly from the corresponding dataloader.
+    if len(evaluate_selected_t_cs_lst_tar) == 0:
+        for batch in evaluate_dataloader:
+            if len(batch[0]) == 0:
+                continue
+            images, texts = batch[0][:1], tokenize(batch[1])[:1]
+            images = images.to(device)
+            texts = texts.to(device)
+            with torch.no_grad(), torch.cuda.amp.autocast():
+                image_features2, text_features2, _ = target_model(images, texts)
+            cs_2 = torch.diagonal(image_features2 @ text_features2.T)
+            evaluate_selected_t_cs_lst_tar.extend(cs_2.detach().cpu().numpy())
+            evaluate_selected_t_feat_lst_tar.extend(torch.cat([image_features2, text_features2], dim=1).detach().cpu())
+            break
+
+    if len(evaluate_selected_nt_cs_lst_tar) == 0:
+        for batch in evaluate_valloader:
+            if len(batch[0]) == 0:
+                continue
+            images, texts = batch[0][:1], tokenize(batch[1])[:1]
+            images = images.to(device)
+            texts = texts.to(device)
+            with torch.no_grad(), torch.cuda.amp.autocast():
+                image_features2, text_features2, _ = target_model(images, texts)
+            cs_2 = torch.diagonal(image_features2 @ text_features2.T)
+            evaluate_selected_nt_cs_lst_tar.extend(cs_2.detach().cpu().numpy())
+            evaluate_selected_nt_feat_lst_tar.extend(torch.cat([image_features2, text_features2], dim=1).detach().cpu())
+            break
+
     if len(evaluate_selected_t_cs_lst_tar) == 0 or len(evaluate_selected_nt_cs_lst_tar) == 0:
         raise ValueError(
             f"Empty evaluation feature set. members={len(evaluate_selected_t_cs_lst_tar)}, "
