@@ -55,6 +55,14 @@ def weight_orthogonality_regularizer(model, lambda_reg):
 
 
 def train_attackmodel(args, selected_t_feat_lst_tar, selected_nt_feat_lst_tar, true_train, pseudo_train, train_threshold, device):
+    if len(selected_t_feat_lst_tar) == 0:
+        raise ValueError(
+            "Pseudo-member set is empty. Please lower --hyper-lambda or check data filtering settings."
+        )
+    if len(selected_nt_feat_lst_tar) == 0:
+        raise ValueError(
+            "Non-member set is empty. Please increase --nt-length or check non-train data sources."
+        )
     
     X1 = torch.stack(selected_t_feat_lst_tar) ## pseudo-train
     X2 = torch.stack(selected_nt_feat_lst_tar) 
@@ -187,4 +195,3 @@ def train_attackmodel(args, selected_t_feat_lst_tar, selected_nt_feat_lst_tar, t
             break
     
     return attack_model, mis_rate
-

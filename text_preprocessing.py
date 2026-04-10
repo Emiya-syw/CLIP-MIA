@@ -1,11 +1,11 @@
-import string
-#defining the function to remove punctuation
-import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-from nltk.stem.porter import PorterStemmer
 import re
-nltk.download('stopwords')
+import string
+
+_FALLBACK_STOPWORDS = {
+    "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "has",
+    "he", "in", "is", "it", "its", "of", "on", "that", "the", "to", "was",
+    "were", "will", "with",
+}
 
 def remove_whitespace(text):
     return text.strip()
@@ -20,15 +20,15 @@ def remove_punctuation(text):
     return "".join([i for i in text if i not in string.punctuation])
 
 def remove_stopword(text):
-    tokens = word_tokenize(text)
-    english_stopwords = stopwords.words('english')
+    tokens = re.findall(r"\b\w+\b", text)
+    english_stopwords = _FALLBACK_STOPWORDS
     tokens_wo_stopwords = [t for t in tokens if t not in english_stopwords]
     return " ".join(tokens_wo_stopwords)
 
 def stem_words(text):
-    word_tokens = word_tokenize(text)
-    stems = [stemmer.stem(word) for word in word_tokens]
-    return " ".join(stems)
+    # Not used in the current attack flow; keep a safe no-op placeholder.
+    word_tokens = re.findall(r"\b\w+\b", text)
+    return " ".join(word_tokens)
  
 def text_preprocessing(text):
     text_1 = remove_whitespace(text)
