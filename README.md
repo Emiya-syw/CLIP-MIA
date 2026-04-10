@@ -67,17 +67,23 @@ We also present a new weakly supervised attack method that leverages ground-trut
 
 ### Quick Run Script
 
-现在参数都写在 `run_attack.sh` 里，不需要命令行传参。
+现在支持你的自定义数据（forget / retain）流程：
+
+1. 先把训练JSONL和测试pair-JSONL转成CSV（`filepath,title,url`）：
+
+```bash
+python3 prepare_vaw_mia_csv.py   --train-jsonl /path/to/train.jsonl   --test-jsonl /path/to/test_pairs.jsonl   --output-dir /path/to/mia_csvs   --train-image-root /path/to/train_images   --test-image-root /path/to/test_images
+```
+
+2. 修改 `run_attack.sh` 里的 `CSV_DIR` 和样本数参数。
+
+3. 直接运行：
 
 ```bash
 bash run_attack.sh
 ```
 
-使用方式：
-
-1. 打开 `run_attack.sh`。
-2. 修改脚本顶部的模型名、采样参数和数据路径（例如 `MODEL_NAME`、`NT_LENGTH`、`TRAIN_DATA` 等）。
-3. 保存后直接执行 `bash run_attack.sh`。
+说明：默认映射是 `forget -> member`，`retain -> non-member`。
 
 &nbsp;
 

@@ -29,11 +29,12 @@ except ImportError:
 from open_clip import tokenize
 
 class CsvDataset(Dataset):
-    def __init__(self, input_filename, transforms, img_key, caption_key, sep="\t"):
+    def __init__(self, input_filename, transforms, img_key, caption_key, url_key="url", sep="\t"):
         logging.debug(f'Loading csv data from {input_filename}.')
-        df = pd.read_csv(input_filename)
+        df = pd.read_csv(input_filename, sep=sep)
         self.images = df[img_key].tolist()
         self.captions = df[caption_key].tolist()
+        self.urls = df[url_key].tolist() if url_key in df.columns else [str(x) for x in self.images]
         self.transforms = transforms
         logging.debug('Done loading data.')
                
@@ -41,11 +42,10 @@ class CsvDataset(Dataset):
         return len(self.captions)
 
     def __getitem__(self, idx):
-
         images = self.transforms(Image.open(str(self.images[idx])))
-        texts = tokenize([str(self.captions[idx])])[0]
-        
-        return images, texts
+        texts = str(self.captions[idx])
+        metadata = {"url": str(self.urls[idx])}
+        return images, texts, metadata
 
 
 class SharedEpoch:
@@ -392,6 +392,7 @@ def get_csv_dataset(args, preprocess_fn, is_train, epoch=0):
         preprocess_fn,
         img_key=args.csv_img_key,
         caption_key=args.csv_caption_key,
+        url_key=args.csv_url_key,
         sep=args.csv_separator)
     num_samples = len(dataset)
     sampler = DistributedSampler(dataset) if args.distributed and is_train else None
@@ -574,4 +575,3 @@ class MyDataset(Dataset):
         texts = tokenize([self.captions[idx]])[0]
         
         return images, texts
-
