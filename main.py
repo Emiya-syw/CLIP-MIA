@@ -78,6 +78,20 @@ def sweep(score, x):
     acc = np.max(1-(fpr+(1-tpr))/2)
     return fpr, tpr, auc(fpr, tpr), acc
 
+
+def _select_indices_with_fallback(total_len, excluded_idx):
+    """Select indices after exclusion, but keep at least one sample."""
+    all_idx = np.arange(total_len)
+    if len(excluded_idx) > 0:
+        selected_idx = np.setdiff1d(all_idx, excluded_idx)
+    else:
+        selected_idx = all_idx
+
+    if len(selected_idx) == 0 and total_len > 0:
+        selected_idx = np.array([np.random.randint(0, total_len)])
+    return selected_idx
+
+
 def main(args, device):
     nontrain_length = args.nt_length # sample size for each dataset
     length_train = args.t_length # 
@@ -190,10 +204,7 @@ def main(args, device):
         x_ind_4th = np.where(np.isin(np.array(evlauate_train_url), common4))[0]
         combined_x_ind = np.union1d(np.union1d(np.union1d(x_ind, x_ind_2nd), x_ind_3rd), x_ind_4th)
 
-        if len(combined_x_ind) > 0:
-            selected_ind = np.setdiff1d(np.arange(len(batch[0])), combined_x_ind)
-        else:
-            selected_ind = np.arange(len(batch[0]))
+        selected_ind = _select_indices_with_fallback(len(batch[0]), combined_x_ind)
 
         images, texts = batch[0][selected_ind], tokenize(batch[1])[selected_ind]
         evaluate_cnt_train += len(images)
@@ -242,10 +253,7 @@ def main(args, device):
         x_ind_6th = np.where(np.isin(np.array(evlauate_non_train_url), common6))[0]        
         combined_x_ind = np.union1d(np.union1d(np.union1d(np.union1d(np.union1d(x_ind, x_ind_2nd), x_ind_3rd), x_ind_4th), x_ind_5th), x_ind_6th)
 
-        if len(combined_x_ind) > 0:
-            selected_ind = np.setdiff1d(np.arange(len(batch[0])), combined_x_ind)
-        else:
-            selected_ind = np.arange(len(batch[0]))
+        selected_ind = _select_indices_with_fallback(len(batch[0]), combined_x_ind)
 
         images, texts = batch[0][selected_ind], tokenize(batch[1])[selected_ind]
         evaluate_cnt_val += len(images)
@@ -298,10 +306,7 @@ def main(args, device):
         x_ind_6th = np.where(np.isin(np.array(evlauate_non_train_url), common6))[0]        
         combined_x_ind = np.union1d(np.union1d(np.union1d(np.union1d(np.union1d(x_ind, x_ind_2nd), x_ind_3rd), x_ind_4th), x_ind_5th), x_ind_6th)
 
-        if len(combined_x_ind) > 0:
-            selected_ind = np.setdiff1d(np.arange(len(batch[0])), combined_x_ind)
-        else:
-            selected_ind = np.arange(len(batch[0]))
+        selected_ind = _select_indices_with_fallback(len(batch[0]), combined_x_ind)
 
         images, texts = batch[0][selected_ind], tokenize(batch[1])[selected_ind]
         evaluate_cnt_val += len(images)
@@ -352,10 +357,7 @@ def main(args, device):
         x_ind_5th = np.where(np.isin(np.array(evlauate_non_train_url), common5))[0]        
         combined_x_ind = np.union1d(np.union1d(np.union1d(np.union1d(x_ind, x_ind_2nd), x_ind_3rd), x_ind_4th), x_ind_5th)
 
-        if len(combined_x_ind) > 0:
-            selected_ind = np.setdiff1d(np.arange(len(batch[0])), combined_x_ind)
-        else:
-            selected_ind = np.arange(len(batch[0]))
+        selected_ind = _select_indices_with_fallback(len(batch[0]), combined_x_ind)
 
         images, texts = batch[0][selected_ind], tokenize(batch[1])[selected_ind]
         evaluate_cnt_val += len(images)
@@ -384,6 +386,13 @@ def main(args, device):
     print(util.red('Since the numbers between two datasets are not balanced, we do random sampling here to train an attack model'))
 
     ################################################## random sampling
+
+    if len(evaluate_selected_t_cs_lst_tar) == 0 or len(evaluate_selected_nt_cs_lst_tar) == 0:
+        raise ValueError(
+            f"Empty evaluation feature set. members={len(evaluate_selected_t_cs_lst_tar)}, "
+            f"non_members={len(evaluate_selected_nt_cs_lst_tar)}. "
+            "Try reducing overlap filtering strictness or increasing eval-length."
+        )
 
     length_tuned = min([len(evaluate_selected_t_cs_lst_tar), len(evaluate_selected_nt_cs_lst_tar)])
 
